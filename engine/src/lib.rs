@@ -3,9 +3,12 @@
 use wasm_bindgen::prelude::*;
 
 pub mod bodies;
+pub mod kepler;
 pub mod lambert;
 pub mod mga;
+pub mod mga1dsm;
 pub mod porkchop;
+pub mod sade;
 
 /// Sun's gravitational parameter, m^3/s^2.
 pub const MU_SUN: f64 = 1.327_124_400_18e20;

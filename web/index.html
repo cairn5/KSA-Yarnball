@@ -46,7 +46,11 @@
       #rf-results .num { text-align: right; }
       #rf-results tr:hover td { background: #1d2a3b; }
       #rf-results tr.selected td { background: #2a4a7a; }
+      #rf-results td.dim { color: #6b7a8c; }
+      #rf-results td.live { color: #ffd166; }
+      #rf-results tr.running td:first-child::before { content: "▸ "; color: #ffd166; }
       label > span { display: flex; align-items: center; gap: 0.4rem; }
+      button.link { font: inherit; font-size: 0.8rem; color: #8fb4ff; background: none; border: 0; padding: 0; margin-top: 0.4rem; cursor: pointer; text-decoration: underline; }
     </style>
   </head>
   <body>
@@ -111,8 +115,17 @@
         <button id="rf-search" class="primary">Find routes</button>
         <p class="hint" id="rf-status"></p>
         <div id="rf-results"></div>
+        <div id="rf-refine" hidden>
+          <div class="row">
+            <label>Islands <input id="rf-islands" type="number" min="1" max="32" /></label>
+            <label>Rounds of 500 gen. <input id="rf-rounds" type="number" min="1" value="10" /></label>
+          </div>
+          <button id="rf-refine-go" class="primary">Refine all with SADE</button>
+          <output id="rf-refine-status"></output>
+        </div>
         <output id="rf-events"></output>
-        <p class="hint">Flyby-only model: Lambert legs, powered flybys, launch from a 200 km parking orbit. Lists the best route per sequence within 15% of the best.</p>
+        <button id="rf-copy" class="link" hidden>Copy pykep chromosome</button>
+        <p class="hint">Search: flyby-only model (Lambert legs, powered flybys, launch from a 200 km parking orbit); lists the best route per sequence within 15% of the best. Each route is then refined in turn, best first, by seeded SADE on the deep-space-burn model (pykep's MGA-1DSM: unpowered flybys, one burn per leg), one independent island per worker; the list re-sorts by Δv as each finishes. * = stopped early.</p>
       </div>
       <p class="hint">Drag to pan, scroll to zoom, double-click to reset. Click a planet for its orbit.</p>
     </section>

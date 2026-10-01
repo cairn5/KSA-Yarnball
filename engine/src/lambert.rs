@@ -24,7 +24,7 @@ pub(crate) fn sub(a: V3, b: V3) -> V3 {
 }
 
 /// Stumpff function C(z).
-fn stumpff_c(z: f64) -> f64 {
+pub(crate) fn stumpff_c(z: f64) -> f64 {
     if z.abs() < 1e-3 {
         0.5 - z / 24.0 + z * z / 720.0
     } else if z > 0.0 {
@@ -35,7 +35,7 @@ fn stumpff_c(z: f64) -> f64 {
 }
 
 /// Stumpff function S(z).
-fn stumpff_s(z: f64) -> f64 {
+pub(crate) fn stumpff_s(z: f64) -> f64 {
     if z.abs() < 1e-3 {
         1.0 / 6.0 - z / 120.0 + z * z / 5040.0
     } else if z > 0.0 {

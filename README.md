@@ -9,6 +9,9 @@ engine/   Rust library (cdylib + rlib). Headless maths, exposed via wasm-bindgen
 web/      Vite + TypeScript interface. Imports the wasm build from web/src/engine/ (generated).
           src/plot/  full-screen canvas plan view: log radial scale, pan/zoom, layers of lines and markers.
           src/routeWorker.ts  runs the flyby-sequence search (engine/src/mga.rs) in a Web Worker.
+          src/refineWorker.ts one SADE island (engine/src/mga1dsm.rs, sade.rs) per Web Worker.
+tools/    pykep_reference.py regenerates engine/tests/data/pykep_reference.json, which the
+          engine's tests compare against (needs pykep 2 in a conda environment).
 ```
 
 ## Prerequisites
