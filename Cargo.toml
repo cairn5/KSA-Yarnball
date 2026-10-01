@@ -1,0 +1,11 @@
+[workspace]
+resolver = "2"
+members = ["engine"]
+
+[profile.release]
+opt-level = 3
+lto = true
+
+# The search tests are slow unoptimised.
+[profile.test]
+opt-level = 3

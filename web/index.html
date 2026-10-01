@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Flight Planner</title>
+    <style>
+      html, body { margin: 0; height: 100%; overflow: hidden; background: #0b1020; color: #e2e9f0; font-family: system-ui, sans-serif; }
+      #plot { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+
+      .panel {
+        position: absolute; margin: 16px; padding: 12px 16px; max-width: calc(100vw - 64px);
+        background: #141d2bdd; border: 1px solid #263340; border-radius: 8px; backdrop-filter: blur(6px);
+      }
+      .panel h1, .panel h2 { margin: 0 0 0.5rem; font-size: 1.1rem; }
+      #controls { top: 0; left: 0; width: 25.5rem; max-height: calc(100vh - 56px); overflow-y: auto; }
+      #porkchop { display: block; width: 100%; height: 240px; margin-top: 0.6rem; border-radius: 4px; }
+      .row { display: flex; gap: 0.8rem; }
+      .row label { flex: 1; }
+      #info { top: 0; right: 0; width: 19rem; }
+      [hidden] { display: none !important; }
+
+      label { display: flex; justify-content: space-between; align-items: center; gap: 0.4rem; margin-top: 0.5rem; font-size: 0.9rem; white-space: nowrap; }
+      input, select { width: 5rem; min-width: 0; background: #0b1020; color: inherit; border: 1px solid #263340; border-radius: 4px; padding: 2px 6px; }
+      output { display: block; margin-top: 0.6rem; font: 0.8rem ui-monospace, monospace; white-space: pre-wrap; }
+      input[type=date] { width: 8.5rem; }
+      input[type=number] { width: 3.8rem; }
+      #rf-sequence { flex: 1; width: auto; font-family: ui-monospace, monospace; }
+      #rf-sequence[aria-invalid="true"] { border-color: #e0605a; }
+      select { width: 6rem; }
+      dl { display: grid; grid-template-columns: auto auto; gap: 0.3rem 1rem; margin: 0; font-size: 0.9rem; }
+      dt { color: #94a4b4; }
+      dd { margin: 0; font-family: ui-monospace, monospace; text-align: right; }
+      .hint { color: #94a4b4; font-size: 0.8rem; margin: 0.6rem 0 0; }
+      .tabs { display: flex; gap: 0.3rem; margin-bottom: 0.4rem; }
+      .tabs button, button.primary {
+        font: inherit; font-size: 0.9rem; color: inherit; background: transparent; cursor: pointer;
+        border: 1px solid #263340; border-radius: 4px; padding: 4px 10px;
+      }
+      .tabs button[aria-selected="true"] { background: #263340; font-weight: 600; }
+      button.primary { margin-top: 0.8rem; width: 100%; background: #2a4a7a; border-color: #3b5f95; font-weight: 600; }
+      button.primary:hover { background: #335a92; }
+      #rf-results table { width: 100%; border-collapse: collapse; margin-top: 0.6rem; font-size: 0.82rem; }
+      #rf-results th { text-align: left; color: #94a4b4; font-weight: 500; border-bottom: 1px solid #263340; padding: 2px 4px; }
+      #rf-results td { padding: 3px 4px; font-family: ui-monospace, monospace; cursor: pointer; }
+      #rf-results .num { text-align: right; }
+      #rf-results tr:hover td { background: #1d2a3b; }
+      #rf-results tr.selected td { background: #2a4a7a; }
+      label > span { display: flex; align-items: center; gap: 0.4rem; }
+    </style>
+  </head>
+  <body>
+    <canvas id="plot" aria-label="Solar system plan view. Drag to pan, scroll to zoom, click a planet."></canvas>
+
+    <section id="controls" class="panel">
+      <nav class="tabs" role="tablist">
+        <button role="tab" data-tab="porkchop" aria-selected="true">Porkchop plot</button>
+        <button role="tab" data-tab="routes" aria-selected="false">Route finder</button>
+      </nav>
+      <div id="tab-porkchop" role="tabpanel">
+      <div class="row">
+        <label>From <select id="from"></select></label>
+        <label>To <select id="to"></select></label>
+      </div>
+      <div class="row">
+        <label>Departures from <input id="dep-start" type="date" /></label>
+        <label>for <input id="dep-days" type="number" min="1" step="10" /> d</label>
+      </div>
+      <div class="row">
+        <label>Flight time <input id="tof-min" type="number" min="1" step="10" /></label>
+        <label>to <input id="tof-max" type="number" min="1" step="10" /> d</label>
+      </div>
+      <label>Colour by
+        <select id="metric">
+          <option value="c3">Launch C3</option>
+          <option value="vinfArr">Arrival v∞</option>
+          <option value="total">Launch + arrival v∞</option>
+        </select>
+      </label>
+      <canvas id="porkchop"></canvas>
+      <output id="readout"></output>
+      <output id="leg"></output>
+      <p class="hint"><span id="status"></span><br />Brightest is cheapest; white circle is the minimum. Click to plot a transfer.</p>
+      </div>
+
+      <div id="tab-routes" role="tabpanel" hidden>
+        <div class="row">
+          <label>From <select id="rf-from"></select></label>
+          <label>To <select id="rf-to"></select></label>
+        </div>
+        <div class="row">
+          <label>Launch from <input id="rf-launch-start" type="date" /></label>
+          <label>to <input id="rf-launch-end" type="date" /></label>
+        </div>
+        <div class="row">
+          <label>Arrive by <input id="rf-arrive-by" type="date" /></label>
+          <label>Flybys up to <input id="rf-flybys" type="number" min="0" max="5" value="3" /></label>
+        </div>
+        <label>Sequence <input id="rf-sequence" type="text" placeholder="best (search all)" spellcheck="false" /></label>
+        <p class="hint" id="rf-sequence-hint">Optional: the planets to fly past, e.g. VVEJ or EVVEJS (M is Mars; write Me for Mercury). Gives the best route in each launch window.</p>
+        <div class="row">
+          <label>At target
+            <select id="rf-arrival">
+              <option value="capture">Capture</option>
+              <option value="flyby">Fly past</option>
+            </select>
+          </label>
+          <label>Grid <input id="rf-step" type="number" min="1" step="1" /> d</label>
+        </div>
+        <label>Cost of flight time <span><input id="rf-time-cost" type="number" min="0" step="50" value="100" /> m/s per year</span></label>
+        <button id="rf-search" class="primary">Find routes</button>
+        <p class="hint" id="rf-status"></p>
+        <div id="rf-results"></div>
+        <output id="rf-events"></output>
+        <p class="hint">Flyby-only model: Lambert legs, powered flybys, launch from a 200 km parking orbit. Lists the best route per sequence within 15% of the best.</p>
+      </div>
+      <p class="hint">Drag to pan, scroll to zoom, double-click to reset. Click a planet for its orbit.</p>
+    </section>
+
+    <section id="info" class="panel" aria-live="polite" hidden></section>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
