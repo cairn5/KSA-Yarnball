@@ -313,7 +313,7 @@ export class RouteFinder {
     const entry = this.queue.shift();
     if (!q || !entry) {
       this.running = null;
-      this.refineButton.textContent = "Refine all with SADE";
+      this.refineButton.textContent = "Refine all";
       if (q && this.queueSize) this.refineStatus.textContent = `Refined ${this.queueSize} routes; list sorted by Δv.`;
       // Finish on the new best, unless the user has picked a route to look at.
       if (!this.pinned && this.entries.length) this.select(this.entries[0].id);
@@ -363,7 +363,7 @@ export class RouteFinder {
     }
     for (const e of this.queue) e.state = null;
     this.queue = [];
-    this.refineButton.textContent = "Refine all with SADE";
+    this.refineButton.textContent = "Refine all";
     this.refineStatus.textContent = status ? `${status} ${this.refineStatus.textContent}` : "";
     this.renderTable();
   }
