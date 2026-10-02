@@ -92,6 +92,7 @@ export class Plot {
     const { ctx } = this;
     ctx.fillStyle = BG;
     ctx.fillRect(0, 0, this.width, this.height);
+    this.drawWatermark();
 
     const [cx, cy] = this.project(0, 0);
     ctx.font = FONT;
@@ -131,6 +132,27 @@ export class Plot {
     ctx.textAlign = "left";
     ctx.textBaseline = "bottom";
     ctx.fillText(`radius ln(1 + r / ${this.r0} AU): not to scale, directions true`, 12, this.height - 10);
+  }
+
+  /** Faint widely-spaced title fixed to the screen centre, behind everything. */
+  private drawWatermark() {
+    const { ctx } = this;
+    const size = Math.min(this.width / 8, this.height / 5);
+    const cx = this.width / 2;
+    const cy = this.height / 2;
+    ctx.save();
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#ffffff0d";
+    ctx.font = `200 ${size}px system-ui, sans-serif`;
+    ctx.letterSpacing = `${size * 0.35}px`;
+    // Trailing letter spacing pushes the text left; shift it back by half.
+    ctx.fillText("YARNBALL", cx + size * 0.175, cy);
+    const small = size * 0.16;
+    ctx.font = `300 ${small}px system-ui, sans-serif`;
+    ctx.letterSpacing = `${small * 0.6}px`;
+    ctx.fillText("DISTANCES LOG SCALE", cx + small * 0.3, cy + size * 0.75);
+    ctx.restore();
   }
 
   private *markers(): Generator<Marker> {

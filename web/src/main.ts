@@ -129,13 +129,17 @@ compute();
 const finder = new RouteFinder($<HTMLElement>("#tab-routes"), bodies);
 finder.onShow = (items, day) => show("routes", items, day);
 
-for (const tab of document.querySelectorAll<HTMLButtonElement>("[data-tab]")) {
-  tab.addEventListener("click", () => {
-    activeTab = tab.dataset.tab!;
-    for (const t of document.querySelectorAll<HTMLButtonElement>("[data-tab]")) {
-      t.setAttribute("aria-selected", String(t === tab));
-      $<HTMLElement>(`#tab-${t.dataset.tab}`).hidden = t !== tab;
-    }
-    show(activeTab, ...shown[activeTab]);
-  });
+function selectTab(tab: HTMLButtonElement) {
+  activeTab = tab.dataset.tab!;
+  for (const t of document.querySelectorAll<HTMLButtonElement>("[data-tab]")) {
+    t.setAttribute("aria-selected", String(t === tab));
+    $<HTMLElement>(`#tab-${t.dataset.tab}`).hidden = t !== tab;
+  }
+  show(activeTab, ...shown[activeTab]);
 }
+
+for (const tab of document.querySelectorAll<HTMLButtonElement>("[data-tab]")) {
+  tab.addEventListener("click", () => selectTab(tab));
+}
+// Start on whichever tab index.html marks aria-selected.
+selectTab($<HTMLButtonElement>('[data-tab][aria-selected="true"]'));
