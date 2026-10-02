@@ -1,0 +1,12 @@
+# Cloudflare Worker serving the static build. Deployed from CI by
+# .github/workflows/deploy.yml.
+name = "yarnball"
+compatibility_date = "2026-10-01"
+
+[assets]
+directory = "./dist"
+
+# Cloudflare creates the DNS record and certificate on deploy.
+routes = [
+  { pattern = "yarnball.app", custom_domain = true },
+]

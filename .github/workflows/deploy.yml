@@ -1,0 +1,55 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-pack
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run build
+
+      # main deploys to production; PRs upload a preview version under an
+      # alias named after the branch (sanitised to a valid hostname label).
+      - name: Choose wrangler command
+        id: cmd
+        env:
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            alias=$(echo "$BRANCH" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | cut -c1-40 | sed 's/-*$//')
+            echo "command=versions upload --preview-alias $alias" >> "$GITHUB_OUTPUT"
+          else
+            echo "command=deploy" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: web
+          command: ${{ steps.cmd.outputs.command }}
