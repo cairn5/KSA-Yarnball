@@ -3,6 +3,10 @@
 name = "yarnball"
 compatibility_date = "2026-10-01"
 
+# Keep *.workers.dev on so PRs get preview URLs.
+workers_dev = true
+preview_urls = true
+
 # Cloudflare creates the DNS record and certificate on deploy.
 routes = [
   { pattern = "yarnball.app", custom_domain = true },
