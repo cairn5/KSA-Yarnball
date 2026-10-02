@@ -134,24 +134,32 @@ export class Plot {
     ctx.fillText(`radius ln(1 + r / ${this.r0} AU): not to scale, directions true`, 12, this.height - 10);
   }
 
-  /** Faint widely-spaced title fixed to the screen centre, behind everything. */
+  /**
+   * Faint widely-spaced title centred on the Sun, and a scale note at the top right outside
+   * the outermost ring. Both pan and zoom with the plot, behind everything.
+   */
   private drawWatermark() {
     const { ctx } = this;
-    const size = Math.min(this.width / 8, this.height / 5);
-    const cx = this.width / 2;
-    const cy = this.height / 2;
+    const [cx, cy] = this.project(0, 0);
+    const outer = Math.log1p(Math.max(...this.gridAu) / this.r0) * this.k;
     ctx.save();
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
     ctx.fillStyle = "#ffffff0d";
+    ctx.textBaseline = "middle";
+    ctx.textAlign = "center";
+    const size = outer * 0.24;
     ctx.font = `200 ${size}px system-ui, sans-serif`;
     ctx.letterSpacing = `${size * 0.35}px`;
     // Trailing letter spacing pushes the text left; shift it back by half.
     ctx.fillText("YARNBALL", cx + size * 0.175, cy);
-    const small = size * 0.16;
-    ctx.font = `300 ${small}px system-ui, sans-serif`;
-    ctx.letterSpacing = `${small * 0.6}px`;
-    ctx.fillText("DISTANCES LOG SCALE", cx + small * 0.3, cy + size * 0.75);
+
+    ctx.fillStyle = "#ffffff26";
+    ctx.textBaseline = "bottom";
+    ctx.textAlign = "right";
+    const small = outer * 0.045;
+    ctx.font = `700 ${small}px system-ui, sans-serif`;
+    ctx.letterSpacing = `${small * 0.4}px`;
+    // Sitting on the ring's top tangent keeps the whole label outside it.
+    ctx.fillText("DISTANCES LOG SCALE", cx + outer * 1.1, cy - outer);
     ctx.restore();
   }
 
